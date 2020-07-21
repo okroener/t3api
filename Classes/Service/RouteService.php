@@ -2,13 +2,17 @@
 declare(strict_types=1);
 namespace SourceBroker\T3api\Service;
 
+use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use SourceBroker\T3api\Routing\Enhancer\ResourceEnhancer;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 /**
@@ -93,11 +97,13 @@ class RouteService implements SingletonInterface
             return $site;
         }
 
-        /** @var Site $site */
-        $site = GeneralUtility::makeInstance(ObjectManager::class)
-            ->get(SiteFinder::class)
-            ->getSiteByIdentifier('main');
-
+        $allSites = GeneralUtility::makeInstance(ObjectManager::class)->get(SiteFinder::class)->getAllSites();
+        foreach ($allSites as $siteToCheck) {
+            if (rtrim((string)$siteToCheck->getBase(), '/') == rtrim(GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST'), '/')) {
+                $site = $siteToCheck;
+                break;
+            }
+        }
         return $site;
     }
 }
